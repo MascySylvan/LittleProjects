@@ -23,7 +23,7 @@ public class Canvas extends JFrame {
 
 	private Snake snake = new Snake();
 	private Food food = new Food(snake);
-	final Timer motion = new Timer(10, null);
+	final Timer motion = new Timer(100, null);
 
 	public Canvas() {
 		super("Snake");
@@ -32,7 +32,6 @@ public class Canvas extends JFrame {
 
 		motion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				snake.aiMovement(food);
 				snake.updateCoords(food);
 				snake.checkStatus();
 				
@@ -109,7 +108,7 @@ public class Canvas extends JFrame {
 		super.paint(g1);
 		Graphics2D g = (Graphics2D) g1;
 
-		g.setStroke(new BasicStroke(10));
+		g.setStroke(new BasicStroke(100));
 		g.drawLine(40, 40, 40, 710); // right
 		g.drawLine(40, 710, 710, 710); // bottom
 		g.drawLine(710, 710, 710, 40); // left

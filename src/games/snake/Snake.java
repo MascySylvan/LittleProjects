@@ -12,7 +12,6 @@ public class Snake {
 	private boolean isAlive;
 	private boolean isLonger;
 	List<int[]> bodyCoords = new LinkedList<int[]>();
-	List<int[]> tempDeadlyCoords = new LinkedList<int[]>();
 
 	public Snake() {
 		this.setX(150);
@@ -69,88 +68,6 @@ public class Snake {
 		}
 	}
 
-	private boolean coordIsDeadly(int x, int y) {
-		// border check
-		if (x >= 710 || x <= 40 || y >= 710 || y <= 40) {
-			return true;
-		}
-
-		// body check
-		for (int i = 1; i < this.getBodyCoords().size(); i++) {
-			if (x == this.getBodyCoords().get(i)[0] && y == this.getBodyCoords().get(i)[1]) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public void aiMovement(Food f) {
-		String[] movementPrio;
-
-		if (f.getX() <= this.getX()) {
-			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "l", "u", "r", "d" };
-			} else {
-				movementPrio = new String[] { "l", "d", "r", "u" };
-			}
-		} else {
-			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "r", "u", "l", "d" };
-			} else {
-				movementPrio = new String[] { "r", "d", "l", "u" };
-			}
-		}
-
-		String selectedMove = "";
-		for (int i = 0; i < 4; i++) {
-			String move = movementPrio[i];
-
-			if (move.equalsIgnoreCase("l")) {
-				if (!this.getDirection().equalsIgnoreCase("r")) {
-					int newX = this.getX() - this.getSpeed();
-					int newY = this.getY();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "l";
-						break;
-					}
-				}
-			} else if (move.equalsIgnoreCase("u")) {
-				if (!this.getDirection().equalsIgnoreCase("d")) {
-					int newX = this.getX();
-					int newY = this.getY() - this.getSpeed();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "u";
-						break;
-					}
-				}
-			} else if (move.equalsIgnoreCase("r")) {
-				if (!this.getDirection().equalsIgnoreCase("l")) {
-					int newX = this.getX() + this.getSpeed();
-					int newY = this.getY();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "r";
-						break;
-					}
-				}
-			} else {
-				if (!this.getDirection().equalsIgnoreCase("u")) {
-					int newX = this.getX();
-					int newY = this.getY() + this.getSpeed();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "d";
-						break;
-					}
-				}
-			}
-		}
-		
-		this.setDirection(selectedMove);
-	}
 
 	public int getX() {
 		return x;
@@ -206,14 +123,6 @@ public class Snake {
 
 	public void setBodyCoords(List<int[]> bodyCoords) {
 		this.bodyCoords = bodyCoords;
-	}
-
-	public List<int[]> getTempDeadlyCoords() {
-		return tempDeadlyCoords;
-	}
-
-	public void setTempDeadlyCoords(List<int[]> tempDeadlyCoords) {
-		this.tempDeadlyCoords = tempDeadlyCoords;
 	}
 
 	@Override
