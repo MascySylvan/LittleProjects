@@ -56,4 +56,9 @@ public class Food {
 		this.y = y;
 	}
 
+	@Override
+	public String toString() {
+		return "Food [x=" + x + ", y=" + y + ", rand=" + rand + "]";
+	}
+
 }

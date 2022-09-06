@@ -73,6 +73,9 @@ public class Canvas extends JFrame {
 				case KeyEvent.VK_R:
 					reset();
 					break;
+				case KeyEvent.VK_P:
+					pause();
+					break;
 				}
 			}
 		});
@@ -84,6 +87,14 @@ public class Canvas extends JFrame {
 		snake = new Snake();
 		food = new Food(snake);
 		motion.start();
+	}
+	
+	private void pause() {
+		if (motion.isRunning()) {
+			motion.stop();
+		} else {
+			motion.start();
+		}
 	}
 
 	public void paint(Graphics g) {
