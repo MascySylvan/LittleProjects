@@ -23,7 +23,7 @@ public class Canvas extends JFrame {
 
 	private Snake snake = new Snake();
 	private Food food = new Food(snake);
-	final Timer motion = new Timer(100, null);
+	final Timer motion = new Timer(10, null);
 
 	public Canvas() {
 		super("Snake");
@@ -32,6 +32,7 @@ public class Canvas extends JFrame {
 
 		motion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
+				snake.aiMovement(food);
 				snake.updateCoords(food);
 				snake.checkStatus();
 				
