@@ -1,6 +1,7 @@
 package games.snake;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -21,6 +22,7 @@ public class Canvas extends JFrame {
 	private Graphics dbg;
 
 	private Snake snake = new Snake();
+	private Food food = new Food(snake);
 	final Timer motion = new Timer(75, null);
 
 	public Canvas() {
@@ -30,7 +32,17 @@ public class Canvas extends JFrame {
 
 		motion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				snake.updateCoords();
+				snake.updateCoords(food);
+				snake.checkStatus();
+				
+				if (!snake.isAlive() ) {
+					System.out.println("Dead");
+					motion.stop();
+				} else {
+					if (snake.isLonger() ) {
+						food = new Food(snake);
+					}
+				}
 			}
 		});
 
@@ -58,10 +70,18 @@ public class Canvas extends JFrame {
 						snake.setDirection("r");
 					}
 					break;
+				case KeyEvent.VK_R:
+					reset();
+					break;
 				}
 			}
 		});
 
+		motion.start();
+	}
+	
+	private void reset() {
+		snake = new Snake();
 		motion.start();
 	}
 
@@ -76,7 +96,7 @@ public class Canvas extends JFrame {
 		super.paint(g1);
 		Graphics2D g = (Graphics2D) g1;
 
-		g.setStroke(new BasicStroke(5));
+		g.setStroke(new BasicStroke(10));
 		g.drawLine(40, 40, 40, 710); // right
 		g.drawLine(40, 710, 710, 710); // bottom
 		g.drawLine(710, 710, 710, 40); // left
@@ -91,6 +111,10 @@ public class Canvas extends JFrame {
 
 			g.drawLine(x1, y1, x2, y2);
 		}
+		
+		//draw food
+		g.setColor(Color.DARK_GRAY);
+		g.drawLine(food.getX(), food.getY(), food.getX(), food.getY());
 
 		repaint();
 	}
