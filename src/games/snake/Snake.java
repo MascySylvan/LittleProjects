@@ -7,7 +7,6 @@ public class Snake {
 
 	private int x;
 	private int y;
-	private int speed;
 	private String direction;
 	private boolean isAlive;
 	private boolean isLonger;
@@ -16,7 +15,6 @@ public class Snake {
 	public Snake() {
 		this.setX(150);
 		this.setY(150);
-		this.setSpeed(speed);
 		this.setDirection("r");
 		this.setAlive(true);
 
@@ -84,14 +82,6 @@ public class Snake {
 		this.y = y;
 	}
 
-	public int getSpeed() {
-		return speed;
-	}
-
-	public void setSpeed(int speed) {
-		this.speed = speed;
-	}
-
 	public String getDirection() {
 		return direction;
 	}
@@ -127,8 +117,8 @@ public class Snake {
 
 	@Override
 	public String toString() {
-		return "Snake [x=" + x + ", y=" + y + ", speed=" + speed + ", direction=" + direction + ", isAlive=" + isAlive
-				+ ", isLonger=" + isLonger + ", bodyCoords=" + bodyCoords + "]";
+		return "Snake [x=" + x + ", y=" + y + ", direction=" + direction + ", isAlive=" + isAlive + ", isLonger="
+				+ isLonger + ", bodyCoords=" + bodyCoords + "]";
 	}
 
 }

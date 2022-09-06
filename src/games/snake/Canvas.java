@@ -23,7 +23,7 @@ public class Canvas extends JFrame {
 
 	private Snake snake = new Snake();
 	private Food food = new Food(snake);
-	final Timer motion = new Timer(75, null);
+	final Timer motion = new Timer(100, null);
 
 	public Canvas() {
 		super("Snake");
@@ -82,6 +82,7 @@ public class Canvas extends JFrame {
 	
 	private void reset() {
 		snake = new Snake();
+		food = new Food(snake);
 		motion.start();
 	}
 
