@@ -46,6 +46,7 @@ public class Snake {
 		this.bodyCoords.add(0, new int[] { newX, newY });
 
 		if (f.getX() == newX && f.getY() == newY) {
+			this.tempDeadlyCoords.clear();
 			this.setLonger(true);
 		} else {
 			this.bodyCoords.remove(this.bodyCoords.size() - 1);
@@ -99,26 +100,26 @@ public class Snake {
 
 		if (f.getX() <= this.getX()) {
 			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "l", "u", "r", "d" };
+				movementPrio = new String[] { "l", "u", "d", "r" };
 				if (yDiff > xDiff) {
-					movementPrio = new String[] { "u", "l", "d", "r" };
+					movementPrio = new String[] { "u", "l", "r", "d" };
 				}
 			} else {
-				movementPrio = new String[] { "l", "d", "r", "u" };
+				movementPrio = new String[] { "l", "d", "u", "r" };
 				if (yDiff > xDiff) {
-					movementPrio = new String[] { "d", "l", "u", "r" };
+					movementPrio = new String[] { "d", "l", "r", "u" };
 				}
 			}
 		} else {
 			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "r", "u", "l", "d" };
+				movementPrio = new String[] { "r", "u", "d", "l" };
 				if (yDiff > xDiff) {
-					movementPrio = new String[] { "u", "r", "d", "l" };
+					movementPrio = new String[] { "u", "r", "l", "d" };
 				}
 			} else {
-				movementPrio = new String[] { "r", "d", "l", "u" };
+				movementPrio = new String[] { "r", "d", "u", "l" };
 				if (yDiff > xDiff) {
-					movementPrio = new String[] { "d", "r", "u", "l" };
+					movementPrio = new String[] { "d", "r", "l", "u" };
 				}
 			}
 		}
@@ -170,7 +171,15 @@ public class Snake {
 			}
 		}
 
-		this.setDirection(selectedMove);
+		if (selectedMove.length() > 0) {
+			this.setDirection(selectedMove);
+		} else {
+			this.tempDeadlyCoords.add(new int[] { this.getX(), this.getY() });
+			this.bodyCoords.remove(0);
+			this.setX(this.getBodyCoords().get(0)[0]);
+			this.setY(this.getBodyCoords().get(0)[1]);
+		}
+
 	}
 
 	public int getX() {

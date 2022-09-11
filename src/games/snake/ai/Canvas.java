@@ -26,7 +26,7 @@ public class Canvas extends JFrame {
 	final Timer motion = new Timer(10, null);
 
 	public Canvas() {
-		super("Snake");
+		super("AI: Snake");
 		setBounds(0, 0, 750, 750);
 		setVisible(true);
 
