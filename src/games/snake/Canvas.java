@@ -108,7 +108,7 @@ public class Canvas extends JFrame {
 		super.paint(g1);
 		Graphics2D g = (Graphics2D) g1;
 
-		g.setStroke(new BasicStroke(100));
+		g.setStroke(new BasicStroke(10));
 		g.drawLine(40, 40, 40, 710); // right
 		g.drawLine(40, 710, 710, 710); // bottom
 		g.drawLine(710, 710, 710, 40); // left
