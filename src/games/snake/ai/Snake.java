@@ -5,40 +5,194 @@ import java.util.List;
 
 public class Snake {
 
+	public static final int GRID_MIN = 50;
+
+	private final int gridSize;
+	private final int cellSize;
+	private final int gridMax;
+	private final int totalCells;
+
 	private int x;
 	private int y;
-	private int speed;
 	private String direction;
 	private boolean isAlive;
 	private boolean isLonger;
 	List<int[]> bodyCoords = new LinkedList<int[]>();
-	List<int[]> tempDeadlyCoords = new LinkedList<int[]>();
 
-	public Snake() {
-		this.setX(150);
-		this.setY(150);
-		this.setSpeed(25);
-		this.setDirection("r");
+	private int[] cycleOrder;
+	private int[] cycleIndex;
+
+	public Snake(int gridSize) {
+		this.gridSize = gridSize;
+		this.cellSize = 700 / gridSize; // scale cell size to fit ~750px
+		this.gridMax = GRID_MIN + (gridSize - 1) * cellSize;
+		this.totalCells = gridSize * gridSize;
+
+		buildHamiltonianCycle();
+
+		// Start on column 0 heading down (cycle positions 2, 1, 0)
+		this.setX(GRID_MIN);
+		this.setY(GRID_MIN + 2 * cellSize);
+		this.setDirection("d");
 		this.setAlive(true);
 
-		this.bodyCoords.add(new int[] { 150, 150 });
-		this.bodyCoords.add(new int[] { 125, 150 });
-		this.bodyCoords.add(new int[] { 100, 150 });
+		this.bodyCoords.add(new int[] { GRID_MIN, GRID_MIN + 2 * cellSize });
+		this.bodyCoords.add(new int[] { GRID_MIN, GRID_MIN + 1 * cellSize });
+		this.bodyCoords.add(new int[] { GRID_MIN, GRID_MIN });
+	}
+
+	/**
+	 * Builds a Hamiltonian cycle on an even-sized grid.
+	 * Construction:
+	 *   1) Down column 0: rows 0..N-1
+	 *   2) Right along bottom row: cols 1..N-1
+	 *   3) Zigzag columns N-1 to 1 (N-1 columns, odd count for even N):
+	 *      alternating UP/DOWN, ending at (row 0, col 1) adjacent to start.
+	 */
+	private void buildHamiltonianCycle() {
+		cycleOrder = new int[totalCells];
+		cycleIndex = new int[totalCells];
+
+		int pos = 0;
+
+		// Step 1: Down column 0
+		for (int row = 0; row < gridSize; row++) {
+			int idx = row * gridSize;
+			cycleOrder[idx] = pos;
+			cycleIndex[pos] = idx;
+			pos++;
+		}
+
+		// Step 2: Right along bottom row (cols 1..N-1)
+		for (int col = 1; col < gridSize; col++) {
+			int idx = (gridSize - 1) * gridSize + col;
+			cycleOrder[idx] = pos;
+			cycleIndex[pos] = idx;
+			pos++;
+		}
+
+		// Step 3: Zigzag columns N-1 to 1
+		for (int c = gridSize - 1; c >= 1; c--) {
+			int distFromRight = (gridSize - 1) - c;
+			if (distFromRight % 2 == 0) {
+				for (int row = gridSize - 2; row >= 0; row--) {
+					int idx = row * gridSize + c;
+					cycleOrder[idx] = pos;
+					cycleIndex[pos] = idx;
+					pos++;
+				}
+			} else {
+				for (int row = 0; row <= gridSize - 2; row++) {
+					int idx = row * gridSize + c;
+					cycleOrder[idx] = pos;
+					cycleIndex[pos] = idx;
+					pos++;
+				}
+			}
+		}
+	}
+
+	private int toGridIndex(int px, int py) {
+		int col = (px - GRID_MIN) / cellSize;
+		int row = (py - GRID_MIN) / cellSize;
+		return row * gridSize + col;
+	}
+
+	private int getPathPos(int px, int py) {
+		return cycleOrder[toGridIndex(px, py)];
+	}
+
+	private int cycleDistance(int posA, int posB) {
+		return (posB - posA + totalCells) % totalCells;
+	}
+
+	public void aiMovement(Food f) {
+		int headPos = getPathPos(this.x, this.y);
+		int[] tail = bodyCoords.get(bodyCoords.size() - 1);
+		int tailPos = getPathPos(tail[0], tail[1]);
+		int foodPos = getPathPos(f.getX(), f.getY());
+
+		String bestMove = getNextCycleDir(headPos);
+		int snakeLength = bodyCoords.size();
+
+		if (snakeLength < totalCells / 2) {
+			int bestDist = cycleDistance(getNextPos(headPos), foodPos);
+			String opposite = getOpposite(this.direction);
+			int[][] neighbors = {
+				{ this.x, this.y - cellSize },
+				{ this.x, this.y + cellSize },
+				{ this.x - cellSize, this.y },
+				{ this.x + cellSize, this.y }
+			};
+			String[] dirs = { "u", "d", "l", "r" };
+
+			for (int i = 0; i < 4; i++) {
+				if (dirs[i].equals(opposite)) continue;
+				int nx = neighbors[i][0], ny = neighbors[i][1];
+				if (nx < GRID_MIN || nx > gridMax || ny < GRID_MIN || ny > gridMax) continue;
+				if (isBodyAt(nx, ny)) continue;
+
+				int nPos = getPathPos(nx, ny);
+				int distToN = cycleDistance(headPos, nPos);
+				int distToTail = cycleDistance(headPos, tailPos);
+
+				if (distToN >= distToTail) continue;
+
+				int distToFood = cycleDistance(nPos, foodPos);
+				if (distToFood < bestDist) {
+					bestDist = distToFood;
+					bestMove = dirs[i];
+				}
+			}
+		}
+
+		this.setDirection(bestMove);
+	}
+
+	private int getNextPos(int pos) {
+		return (pos + 1) % totalCells;
+	}
+
+	private String getNextCycleDir(int headPos) {
+		int nextPos = getNextPos(headPos);
+		int nextIdx = cycleIndex[nextPos];
+		int nextCol = nextIdx % gridSize;
+		int nextRow = nextIdx / gridSize;
+		int nextPx = GRID_MIN + nextCol * cellSize;
+		int nextPy = GRID_MIN + nextRow * cellSize;
+
+		if (nextPx > this.x) return "r";
+		if (nextPx < this.x) return "l";
+		if (nextPy > this.y) return "d";
+		return "u";
+	}
+
+	private String getOpposite(String dir) {
+		switch (dir) {
+			case "r": return "l";
+			case "l": return "r";
+			case "u": return "d";
+			case "d": return "u";
+		}
+		return "";
+	}
+
+	private boolean isBodyAt(int px, int py) {
+		for (int[] seg : bodyCoords) {
+			if (seg[0] == px && seg[1] == py) return true;
+		}
+		return false;
 	}
 
 	public void updateCoords(Food f) {
-		int newX = this.getX();
-		int newY = this.getY();
+		int newX = this.x, newY = this.y;
 		this.setLonger(false);
 
-		if (this.direction.equalsIgnoreCase("r")) {
-			newX += this.getSpeed();
-		} else if (this.direction.equalsIgnoreCase("l")) {
-			newX -= this.getSpeed();
-		} else if (this.direction.equalsIgnoreCase("u")) {
-			newY -= this.getSpeed();
-		} else if (this.direction.equalsIgnoreCase("d")) {
-			newY += this.getSpeed();
+		switch (this.direction) {
+			case "r": newX += cellSize; break;
+			case "l": newX -= cellSize; break;
+			case "u": newY -= cellSize; break;
+			case "d": newY += cellSize; break;
 		}
 
 		this.setX(newX);
@@ -46,7 +200,6 @@ public class Snake {
 		this.bodyCoords.add(0, new int[] { newX, newY });
 
 		if (f.getX() == newX && f.getY() == newY) {
-			this.tempDeadlyCoords.clear();
 			this.setLonger(true);
 		} else {
 			this.bodyCoords.remove(this.bodyCoords.size() - 1);
@@ -54,202 +207,33 @@ public class Snake {
 	}
 
 	public void checkStatus() {
-
-		// border check
-		if (this.getX() >= 710 || this.getX() <= 40 || this.getY() >= 710 || this.getY() <= 40) {
+		if (this.x > gridMax || this.x < GRID_MIN || this.y > gridMax || this.y < GRID_MIN) {
 			this.setAlive(false);
 			return;
 		}
-
-		// body check
-		for (int i = 1; i < this.getBodyCoords().size(); i++) {
-			if (this.getX() == this.getBodyCoords().get(i)[0] && this.getY() == this.getBodyCoords().get(i)[1]) {
+		for (int i = 1; i < bodyCoords.size(); i++) {
+			if (this.x == bodyCoords.get(i)[0] && this.y == bodyCoords.get(i)[1]) {
 				this.setAlive(false);
 				return;
 			}
 		}
 	}
 
-	private boolean coordIsDeadly(int x, int y) {
-		// border check
-		if (x >= 710 || x <= 40 || y >= 710 || y <= 40) {
-			return true;
-		}
+	// --- Getters / Setters ---
 
-		// body check
-		for (int i = 1; i < this.getBodyCoords().size(); i++) {
-			if (x == this.getBodyCoords().get(i)[0] && y == this.getBodyCoords().get(i)[1]) {
-				return true;
-			}
-		}
-
-		// temp check
-		for (int i = 0; i < this.getTempDeadlyCoords().size(); i++) {
-			if (x == this.getTempDeadlyCoords().get(i)[0] && y == this.getTempDeadlyCoords().get(i)[1]) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public void aiMovement(Food f) {
-		String[] movementPrio;
-		int xDiff = (f.getX() - this.getX()) * (f.getX() - this.getX());
-		int yDiff = (f.getY() - this.getY()) * (f.getY() - this.getY());
-
-		if (f.getX() <= this.getX()) {
-			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "l", "u", "d", "r" };
-				if (yDiff > xDiff) {
-					movementPrio = new String[] { "u", "l", "r", "d" };
-				}
-			} else {
-				movementPrio = new String[] { "l", "d", "u", "r" };
-				if (yDiff > xDiff) {
-					movementPrio = new String[] { "d", "l", "r", "u" };
-				}
-			}
-		} else {
-			if (f.getY() <= this.getY()) {
-				movementPrio = new String[] { "r", "u", "d", "l" };
-				if (yDiff > xDiff) {
-					movementPrio = new String[] { "u", "r", "l", "d" };
-				}
-			} else {
-				movementPrio = new String[] { "r", "d", "u", "l" };
-				if (yDiff > xDiff) {
-					movementPrio = new String[] { "d", "r", "l", "u" };
-				}
-			}
-		}
-
-		String selectedMove = "";
-		for (int i = 0; i < 4; i++) {
-			String move = movementPrio[i];
-
-			if (move.equalsIgnoreCase("l")) {
-				if (!this.getDirection().equalsIgnoreCase("r")) {
-					int newX = this.getX() - this.getSpeed();
-					int newY = this.getY();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "l";
-						break;
-					}
-				}
-			} else if (move.equalsIgnoreCase("u")) {
-				if (!this.getDirection().equalsIgnoreCase("d")) {
-					int newX = this.getX();
-					int newY = this.getY() - this.getSpeed();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "u";
-						break;
-					}
-				}
-			} else if (move.equalsIgnoreCase("r")) {
-				if (!this.getDirection().equalsIgnoreCase("l")) {
-					int newX = this.getX() + this.getSpeed();
-					int newY = this.getY();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "r";
-						break;
-					}
-				}
-			} else {
-				if (!this.getDirection().equalsIgnoreCase("u")) {
-					int newX = this.getX();
-					int newY = this.getY() + this.getSpeed();
-
-					if (!coordIsDeadly(newX, newY)) {
-						selectedMove = "d";
-						break;
-					}
-				}
-			}
-		}
-
-		if (selectedMove.length() > 0) {
-			this.setDirection(selectedMove);
-		} else {
-			this.tempDeadlyCoords.add(new int[] { this.getX(), this.getY() });
-			this.bodyCoords.remove(0);
-			this.setX(this.getBodyCoords().get(0)[0]);
-			this.setY(this.getBodyCoords().get(0)[1]);
-		}
-
-	}
-
-	public int getX() {
-		return x;
-	}
-
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
-	public int getSpeed() {
-		return speed;
-	}
-
-	public void setSpeed(int speed) {
-		this.speed = speed;
-	}
-
-	public String getDirection() {
-		return direction;
-	}
-
-	public void setDirection(String direction) {
-		this.direction = direction;
-	}
-
-	public boolean isAlive() {
-		return isAlive;
-	}
-
-	public void setAlive(boolean isAlive) {
-		this.isAlive = isAlive;
-	}
-
-	public boolean isLonger() {
-		return isLonger;
-	}
-
-	public void setLonger(boolean isLonger) {
-		this.isLonger = isLonger;
-	}
-
-	public List<int[]> getBodyCoords() {
-		return bodyCoords;
-	}
-
-	public void setBodyCoords(List<int[]> bodyCoords) {
-		this.bodyCoords = bodyCoords;
-	}
-
-	public List<int[]> getTempDeadlyCoords() {
-		return tempDeadlyCoords;
-	}
-
-	public void setTempDeadlyCoords(List<int[]> tempDeadlyCoords) {
-		this.tempDeadlyCoords = tempDeadlyCoords;
-	}
-
-	@Override
-	public String toString() {
-		return "Snake [x=" + x + ", y=" + y + ", direction=" + direction + ", isAlive=" + isAlive + ", isLonger="
-				+ isLonger + ", bodyCoords=" + bodyCoords + "]";
-	}
-
+	public int getX() { return x; }
+	public void setX(int x) { this.x = x; }
+	public int getY() { return y; }
+	public void setY(int y) { this.y = y; }
+	public String getDirection() { return direction; }
+	public void setDirection(String d) { this.direction = d; }
+	public boolean isAlive() { return isAlive; }
+	public void setAlive(boolean a) { this.isAlive = a; }
+	public boolean isLonger() { return isLonger; }
+	public void setLonger(boolean l) { this.isLonger = l; }
+	public List<int[]> getBodyCoords() { return bodyCoords; }
+	public int getGridSize() { return gridSize; }
+	public int getCellSize() { return cellSize; }
+	public int getGridMax() { return gridMax; }
+	public int getTotalCells() { return totalCells; }
 }

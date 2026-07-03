@@ -8,57 +8,34 @@ public class Food {
 
 	private int x;
 	private int y;
-	Random rand = new Random();
+	private final Random rand = new Random();
 
 	public Food(Snake s) {
-
-		// save all available coords
-		List<int[]> coords = new ArrayList<int[]>();
-		for (int i = 50; i <= 700; i += 25) { // run through x axis
-			for (int k = 50; k <= 700; k += 25) { // run through y axis
-				boolean add = true;
-
-				for (int g = 0; g < s.getBodyCoords().size(); g++) { // run through snake coords
-					if (s.getBodyCoords().get(g)[0] == i && s.getBodyCoords().get(g)[1] == k) {
-						add = false;
+		List<int[]> available = new ArrayList<int[]>();
+		for (int col = 0; col < s.getGridSize(); col++) {
+			for (int row = 0; row < s.getGridSize(); row++) {
+				int px = Snake.GRID_MIN + col * s.getCellSize();
+				int py = Snake.GRID_MIN + row * s.getCellSize();
+				boolean occupied = false;
+				for (int[] seg : s.getBodyCoords()) {
+					if (seg[0] == px && seg[1] == py) {
+						occupied = true;
 						break;
 					}
 				}
-
-				if (add) {
-					coords.add(new int[] { i, k });
+				if (!occupied) {
+					available.add(new int[] { px, py });
 				}
 			}
 		}
 
-		// new food location
-		if (coords.size() > 0) {
-			int r = rand.nextInt(coords.size());
-
-			this.setX(coords.get(r)[0]);
-			this.setY(coords.get(r)[1]);
+		if (available.size() > 0) {
+			int[] chosen = available.get(rand.nextInt(available.size()));
+			this.x = chosen[0];
+			this.y = chosen[1];
 		}
 	}
 
-	public int getX() {
-		return x;
-	}
-
-	public void setX(int x) {
-		this.x = x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
-	@Override
-	public String toString() {
-		return "Food [x=" + x + ", y=" + y + ", rand=" + rand + "]";
-	}
-
+	public int getX() { return x; }
+	public int getY() { return y; }
 }
