@@ -49,10 +49,10 @@ public class QuestionPopup extends JDialog {
 	private static final Color BACKGROUND_COLOR = new Color(139, 0, 0);
 	private static final Color TEXT_COLOR = Color.WHITE;
 	private static final Color GOLD = new Color(218, 165, 32);
-	private static final Font CLUE_FONT = new Font("SansSerif", Font.BOLD, 28);
-	private static final Font RESPONSE_FONT = new Font("SansSerif", Font.BOLD, 24);
 
 	private final Clue clue;
+	private final Font clueFont;
+	private final Font responseFont;
 	private State currentState;
 	private final JPanel contentPanel;
 	private final MouseAdapter clickHandler;
@@ -67,6 +67,14 @@ public class QuestionPopup extends JDialog {
 		super(parent, true); // modal
 		this.clue = clue;
 		this.currentState = State.SHOWING_CLUE;
+
+		// Scale fonts based on parent frame
+		float scale = 1.0f;
+		if (parent instanceof HposJeopardy) {
+			scale = ((HposJeopardy) parent).getScaleFactor();
+		}
+		this.clueFont = new Font("SansSerif", Font.BOLD, (int)(28 * scale));
+		this.responseFont = new Font("SansSerif", Font.BOLD, (int)(24 * scale));
 
 		setUndecorated(true);
 		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -110,6 +118,9 @@ public class QuestionPopup extends JDialog {
 
 		// Show initial clue content
 		showClueContent();
+
+		// Play pop SFX when card opens
+		AudioManager.getInstance().playSFX();
 	}
 
 	/**
@@ -155,7 +166,7 @@ public class QuestionPopup extends JDialog {
 		}
 
 		// Clue text centered with word wrapping via HTML
-		JLabel clueLabel = createWrappingLabel(clue.getClueText(), CLUE_FONT);
+		JLabel clueLabel = createWrappingLabel(clue.getClueText(), clueFont);
 		contentPanel.add(clueLabel, BorderLayout.CENTER);
 
 		contentPanel.revalidate();
@@ -168,7 +179,7 @@ public class QuestionPopup extends JDialog {
 	private void showResponseContent() {
 		contentPanel.removeAll();
 
-		JLabel responseLabel = createWrappingLabel(clue.getResponseText(), RESPONSE_FONT);
+		JLabel responseLabel = createWrappingLabel(clue.getResponseText(), responseFont);
 		contentPanel.add(responseLabel, BorderLayout.CENTER);
 
 		contentPanel.revalidate();
@@ -182,6 +193,7 @@ public class QuestionPopup extends JDialog {
 		switch (currentState) {
 			case SHOWING_CLUE:
 				currentState = State.SHOWING_RESPONSE;
+				AudioManager.getInstance().playSFX();
 				showResponseContent();
 				break;
 			case SHOWING_RESPONSE:

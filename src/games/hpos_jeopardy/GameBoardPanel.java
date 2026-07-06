@@ -54,10 +54,12 @@ public class GameBoardPanel extends JPanel {
 	private final GameData gameData;
 	private final JButton[][] tiles;
 	private final TileState[][] tileStates;
+	private final float scale;
 
 	public GameBoardPanel(HposJeopardy frame, GameData gameData) {
 		this.frame = frame;
 		this.gameData = gameData;
+		this.scale = frame.getScaleFactor();
 		this.tiles = new JButton[ROWS][COLS];
 		this.tileStates = new TileState[ROWS][COLS];
 
@@ -97,8 +99,8 @@ public class GameBoardPanel extends JPanel {
 			};
 			label.setOpaque(false);
 			label.setForeground(Color.WHITE);
-			label.setFont(new Font("SansSerif", Font.BOLD, 13));
-			label.setPreferredSize(new Dimension(100, 40));
+			label.setFont(new Font("SansSerif", Font.BOLD, (int)(13 * scale)));
+			label.setPreferredSize(new Dimension(100, (int)(40 * scale)));
 			label.setBorder(new EmptyBorder(8, 4, 8, 4));
 			categoryPanel.add(label);
 		}
@@ -123,7 +125,7 @@ public class GameBoardPanel extends JPanel {
 						setContentAreaFilled(false);
 						setFocusPainted(false);
 						setBorderPainted(false);
-						setFont(new Font("SansSerif", Font.BOLD, 20));
+						setFont(new Font("SansSerif", Font.BOLD, (int)(20 * scale)));
 						setForeground(GOLD);
 						setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 						addMouseListener(new MouseAdapter() {
@@ -228,11 +230,11 @@ public class GameBoardPanel extends JPanel {
 		};
 
 		JLabel messageLabel = new JLabel("All clues have been revealed!", SwingConstants.CENTER);
-		messageLabel.setFont(new Font("Serif", Font.BOLD, 32));
+		messageLabel.setFont(new Font("Serif", Font.BOLD, (int)(32 * scale)));
 		messageLabel.setForeground(GOLD);
 
 		JLabel subLabel = new JLabel("Great game!", SwingConstants.CENTER);
-		subLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+		subLabel.setFont(new Font("SansSerif", Font.PLAIN, (int)(18 * scale)));
 		subLabel.setForeground(CREAM);
 
 		JPanel textPanel = new JPanel(new BorderLayout(0, 10));
@@ -252,9 +254,9 @@ public class GameBoardPanel extends JPanel {
 				setContentAreaFilled(false);
 				setFocusPainted(false);
 				setBorderPainted(false);
-				setFont(new Font("SansSerif", Font.BOLD, 18));
+				setFont(new Font("SansSerif", Font.BOLD, (int)(18 * scale)));
 				setForeground(DARK_RED);
-				setPreferredSize(new Dimension(180, 45));
+				setPreferredSize(new Dimension((int)(180 * scale), (int)(45 * scale)));
 				setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				addMouseListener(new MouseAdapter() {
 					public void mouseEntered(MouseEvent e) { hovered = true; repaint(); }

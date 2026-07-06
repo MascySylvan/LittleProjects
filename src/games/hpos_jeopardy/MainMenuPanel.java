@@ -39,9 +39,11 @@ public class MainMenuPanel extends JPanel {
 	private static final Color GOLD = new Color(218, 165, 32);
 
 	private final HposJeopardy parentFrame;
+	private final float scale;
 
 	public MainMenuPanel(HposJeopardy parentFrame) {
 		this.parentFrame = parentFrame;
+		this.scale = parentFrame.getScaleFactor();
 		setLayout(new BorderLayout());
 		setBackground(DARK_RED);
 
@@ -53,18 +55,22 @@ public class MainMenuPanel extends JPanel {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setOpaque(false);
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-		buttonPanel.add(Box.createVerticalStrut(20));
+		buttonPanel.add(Box.createVerticalStrut((int)(20 * scale)));
 
 		JButton playButton = createStyledButton("Play");
 		JButton setupButton = createStyledButton("Setup");
+		JButton settingsButton = createStyledButton("Settings");
 
 		playButton.setAlignmentX(CENTER_ALIGNMENT);
 		setupButton.setAlignmentX(CENTER_ALIGNMENT);
+		settingsButton.setAlignmentX(CENTER_ALIGNMENT);
 
 		buttonPanel.add(playButton);
-		buttonPanel.add(Box.createVerticalStrut(15));
+		buttonPanel.add(Box.createVerticalStrut((int)(15 * scale)));
 		buttonPanel.add(setupButton);
-		buttonPanel.add(Box.createVerticalStrut(40));
+		buttonPanel.add(Box.createVerticalStrut((int)(15 * scale)));
+		buttonPanel.add(settingsButton);
+		buttonPanel.add(Box.createVerticalStrut((int)(40 * scale)));
 
 		add(buttonPanel, BorderLayout.SOUTH);
 
@@ -77,6 +83,12 @@ public class MainMenuPanel extends JPanel {
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				parentFrame.showSetup();
+			}
+		});
+
+		settingsButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				parentFrame.showSettings();
 			}
 		});
 	}
@@ -107,6 +119,9 @@ public class MainMenuPanel extends JPanel {
 	 * Creates a styled button with rounded edges and hover effects.
 	 */
 	private JButton createStyledButton(String text) {
+		final int btnW = (int)(200 * scale);
+		final int btnH = (int)(50 * scale);
+		final float fontSize = 20 * scale;
 		JButton button = new JButton(text) {
 			private static final long serialVersionUID = 1L;
 			private boolean hovered = false;
@@ -116,9 +131,9 @@ public class MainMenuPanel extends JPanel {
 				setFocusPainted(false);
 				setBorderPainted(false);
 				setForeground(DARK_RED);
-				setFont(new Font("SansSerif", Font.BOLD, 20));
-				setPreferredSize(new Dimension(200, 50));
-				setMaximumSize(new Dimension(200, 50));
+				setFont(new Font("SansSerif", Font.BOLD, (int) fontSize));
+				setPreferredSize(new Dimension(btnW, btnH));
+				setMaximumSize(new Dimension(btnW, btnH));
 				setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
 				addMouseListener(new MouseAdapter() {
@@ -189,13 +204,12 @@ public class MainMenuPanel extends JPanel {
 	 * Custom painted panel that renders the "HPOS Jeopardy" title with
 	 * decorative elements using Java Graphics2D.
 	 */
-	private static class TitleBanner extends JPanel {
+	private class TitleBanner extends JPanel {
 
 		private static final long serialVersionUID = 1L;
 
 		public TitleBanner() {
 			setOpaque(false);
-			setPreferredSize(new Dimension(800, 350));
 		}
 
 		@Override
@@ -211,7 +225,7 @@ public class MainMenuPanel extends JPanel {
 			int centerY = h / 2;
 
 			// Decorative diamond shape behind the title
-			int diamondSize = 180;
+			int diamondSize = (int)(180 * scale);
 			int[] xPoints = {centerX, centerX + diamondSize, centerX, centerX - diamondSize};
 			int[] yPoints = {centerY - diamondSize, centerY, centerY + diamondSize, centerY};
 			g2d.setColor(new Color(255, 255, 255, 20));
@@ -220,16 +234,18 @@ public class MainMenuPanel extends JPanel {
 			g2d.drawPolygon(xPoints, yPoints, 4);
 
 			// Outer glow circle
+			int glowW = (int)(400 * scale);
+			int glowH = (int)(240 * scale);
 			g2d.setColor(new Color(255, 200, 200, 25));
-			g2d.fillOval(centerX - 200, centerY - 120, 400, 240);
+			g2d.fillOval(centerX - glowW / 2, centerY - glowH / 2, glowW, glowH);
 
-			// Title text shadow
-			Font titleFont = new Font("Serif", Font.BOLD, 56);
+			// Title text
+			Font titleFont = new Font("Serif", Font.BOLD, (int)(56 * scale));
 			g2d.setFont(titleFont);
 			String title = "HPOS Jeopardy";
 			int titleWidth = g2d.getFontMetrics().stringWidth(title);
 			int titleX = centerX - titleWidth / 2;
-			int titleY = centerY - 10;
+			int titleY = centerY - (int)(10 * scale);
 
 			// Drop shadow
 			g2d.setColor(new Color(0, 0, 0, 100));
@@ -240,25 +256,26 @@ public class MainMenuPanel extends JPanel {
 			g2d.drawString(title, titleX, titleY);
 
 			// Subtitle
-			Font subtitleFont = new Font("SansSerif", Font.PLAIN, 16);
+			Font subtitleFont = new Font("SansSerif", Font.PLAIN, (int)(16 * scale));
 			g2d.setFont(subtitleFont);
 			String subtitle = "Test Your Knowledge";
 			int subtitleWidth = g2d.getFontMetrics().stringWidth(subtitle);
 			g2d.setColor(CREAM);
-			g2d.drawString(subtitle, centerX - subtitleWidth / 2, titleY + 40);
+			g2d.drawString(subtitle, centerX - subtitleWidth / 2, titleY + (int)(40 * scale));
 
 			// Decorative lines flanking the subtitle
-			int lineY = titleY + 38;
-			int lineGap = subtitleWidth / 2 + 20;
+			int lineY = titleY + (int)(38 * scale);
+			int lineGap = subtitleWidth / 2 + (int)(20 * scale);
 			g2d.setColor(new Color(218, 165, 32, 150));
-			g2d.drawLine(centerX - lineGap - 80, lineY, centerX - lineGap, lineY);
-			g2d.drawLine(centerX + lineGap, lineY, centerX + lineGap + 80, lineY);
+			g2d.drawLine(centerX - lineGap - (int)(80 * scale), lineY, centerX - lineGap, lineY);
+			g2d.drawLine(centerX + lineGap, lineY, centerX + lineGap + (int)(80 * scale), lineY);
 
 			// Small decorative dots
 			g2d.setColor(GOLD);
 			for (int i = 0; i < 5; i++) {
-				int dotX = centerX - 40 + i * 20;
-				g2d.fillOval(dotX, titleY + 60, 5, 5);
+				int dotX = centerX - (int)(40 * scale) + i * (int)(20 * scale);
+				int dotSize = (int)(5 * scale);
+				g2d.fillOval(dotX, titleY + (int)(60 * scale), dotSize, dotSize);
 			}
 
 			g2d.dispose();

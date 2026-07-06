@@ -72,10 +72,12 @@ public class SetupPanel extends JPanel {
 	private boolean isDirty;
 	private JButton saveButton;
 	private JButton backButton;
+	private float scale;
 
 	public SetupPanel(HposJeopardy parentFrame) {
 		this.parentFrame = parentFrame;
 		this.isDirty = false;
+		this.scale = parentFrame.getScaleFactor();
 
 		categoryNameFields = new JTextField[NUM_CATEGORIES];
 		clueTextFields = new JTextField[NUM_CATEGORIES][NUM_CLUES_PER_CATEGORY];
@@ -117,10 +119,10 @@ public class SetupPanel extends JPanel {
 				g2d.dispose();
 			}
 		};
-		header.setPreferredSize(new Dimension(800, 50));
+		header.setPreferredSize(new Dimension(800, (int)(50 * scale)));
 		header.setLayout(new BorderLayout());
 		JLabel titleLabel = new JLabel("  Game Setup");
-		titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+		titleLabel.setFont(new Font("SansSerif", Font.BOLD, (int)(22 * scale)));
 		titleLabel.setForeground(Color.WHITE);
 		header.add(titleLabel, BorderLayout.WEST);
 		return header;
@@ -154,7 +156,7 @@ public class SetupPanel extends JPanel {
 			gbc.gridy = row;
 			gbc.weightx = 0;
 			JLabel nameLabel = new JLabel("Category Name:");
-			nameLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+			nameLabel.setFont(new Font("SansSerif", Font.BOLD, (int)(12 * scale)));
 			nameLabel.setForeground(DARK_RED);
 			formPanel.add(nameLabel, gbc);
 
@@ -173,7 +175,7 @@ public class SetupPanel extends JPanel {
 				gbc.gridwidth = 2;
 				gbc.weightx = 0;
 				JLabel pointLabel = new JLabel("    \u25B6 " + pointValue + " Points");
-				pointLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+				pointLabel.setFont(new Font("SansSerif", Font.BOLD, (int)(11 * scale)));
 				pointLabel.setForeground(BRIGHT_RED);
 				pointLabel.setBorder(new EmptyBorder(8, 0, 2, 0));
 				formPanel.add(pointLabel, gbc);
@@ -203,15 +205,21 @@ public class SetupPanel extends JPanel {
 				formPanel.add(responseTextFields[cat][clueIdx], gbc);
 				row++;
 
-				// Image path
+				// Image path with browse button
 				gbc.gridx = 0;
 				gbc.gridy = row;
 				gbc.weightx = 0;
 				formPanel.add(createFieldLabel("Image:"), gbc);
 				gbc.gridx = 1;
 				gbc.weightx = 1.0;
-				imagePathFields[cat][clueIdx] = createStyledTextField(-1, 40);
-				formPanel.add(imagePathFields[cat][clueIdx], gbc);
+				imagePathFields[cat][clueIdx] = createStyledTextField(-1, 30);
+				JPanel imagePanel = new JPanel(new BorderLayout(4, 0));
+				imagePanel.setOpaque(false);
+				imagePanel.add(imagePathFields[cat][clueIdx], BorderLayout.CENTER);
+				final JTextField imgField = imagePathFields[cat][clueIdx];
+				JButton browseBtn = createBrowseButton(imgField);
+				imagePanel.add(browseBtn, BorderLayout.EAST);
+				formPanel.add(imagePanel, gbc);
 				row++;
 			}
 
@@ -252,10 +260,10 @@ public class SetupPanel extends JPanel {
 			}
 		};
 		panel.setOpaque(false);
-		panel.setPreferredSize(new Dimension(600, 32));
+		panel.setPreferredSize(new Dimension(600, (int)(32 * scale)));
 		panel.setLayout(new BorderLayout());
 		JLabel label = new JLabel("  Category " + num);
-		label.setFont(new Font("SansSerif", Font.BOLD, 14));
+		label.setFont(new Font("SansSerif", Font.BOLD, (int)(14 * scale)));
 		label.setForeground(Color.WHITE);
 		panel.add(label, BorderLayout.WEST);
 		panel.setBorder(new EmptyBorder(4, 0, 4, 0));
@@ -264,14 +272,58 @@ public class SetupPanel extends JPanel {
 
 	private JLabel createFieldLabel(String text) {
 		JLabel label = new JLabel("    " + text);
-		label.setFont(new Font("SansSerif", Font.PLAIN, 12));
+		label.setFont(new Font("SansSerif", Font.PLAIN, (int)(12 * scale)));
 		label.setForeground(new Color(80, 40, 40));
 		return label;
 	}
 
+	private JButton createBrowseButton(final JTextField targetField) {
+		final int btnW = (int)(70 * scale);
+		final int btnH = (int)(26 * scale);
+		JButton btn = new JButton("Browse") {
+			private static final long serialVersionUID = 1L;
+			private boolean hovered = false;
+			{
+				setContentAreaFilled(false);
+				setFocusPainted(false);
+				setBorderPainted(false);
+				setFont(new Font("SansSerif", Font.PLAIN, (int)(11 * scale)));
+				setForeground(Color.WHITE);
+				setPreferredSize(new Dimension(btnW, btnH));
+				setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				addMouseListener(new MouseAdapter() {
+					public void mouseEntered(MouseEvent e) { hovered = true; repaint(); }
+					public void mouseExited(MouseEvent e) { hovered = false; repaint(); }
+				});
+			}
+			@Override
+			protected void paintComponent(Graphics g) {
+				Graphics2D g2d = (Graphics2D) g.create();
+				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2d.setColor(hovered ? BRIGHT_RED : DARK_RED);
+				g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+				g2d.dispose();
+				super.paintComponent(g);
+			}
+		};
+		btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				java.awt.FileDialog fd = new java.awt.FileDialog(parentFrame, "Select Image", java.awt.FileDialog.LOAD);
+				fd.setFile("*.png;*.jpg;*.jpeg;*.gif;*.bmp");
+				fd.setVisible(true);
+				String dir = fd.getDirectory();
+				String file = fd.getFile();
+				if (dir != null && file != null) {
+					targetField.setText(dir + file);
+				}
+			}
+		});
+		return btn;
+	}
+
 	private JTextField createStyledTextField(int maxChars, int columns) {
 		JTextField field = new JTextField(columns);
-		field.setFont(new Font("SansSerif", Font.PLAIN, 12));
+		field.setFont(new Font("SansSerif", Font.PLAIN, (int)(12 * scale)));
 		field.setBackground(CARD_BG);
 		field.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createLineBorder(FIELD_BORDER, 1),
@@ -301,7 +353,7 @@ public class SetupPanel extends JPanel {
 			}
 		};
 		panel.setLayout(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-		panel.setPreferredSize(new Dimension(800, 50));
+		panel.setPreferredSize(new Dimension(800, (int)(50 * scale)));
 
 		backButton = createActionButton("Back", false);
 		saveButton = createActionButton("Save", true);
@@ -319,6 +371,8 @@ public class SetupPanel extends JPanel {
 	}
 
 	private JButton createActionButton(String text, boolean primary) {
+		final int btnW = (int)(100 * scale);
+		final int btnH = (int)(35 * scale);
 		JButton button = new JButton(text) {
 			private static final long serialVersionUID = 1L;
 			private boolean hovered = false;
@@ -326,8 +380,8 @@ public class SetupPanel extends JPanel {
 				setContentAreaFilled(false);
 				setFocusPainted(false);
 				setBorderPainted(false);
-				setFont(new Font("SansSerif", Font.BOLD, 14));
-				setPreferredSize(new Dimension(100, 35));
+				setFont(new Font("SansSerif", Font.BOLD, (int)(14 * scale)));
+				setPreferredSize(new Dimension(btnW, btnH));
 				setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 				setForeground(primary ? Color.WHITE : DARK_RED);
 				addMouseListener(new MouseAdapter() {
